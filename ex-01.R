@@ -191,5 +191,6 @@ legend('topleft', legend = c('обучение', 'тест', 'f(X)', 'модел
        pch = c(16, 16, NA, NA), 
        col = c(grey(0.2), 'red', 'black', 'blue'),  
        lty = c(0, 0, 2, 1), lwd = c(1, 1, 2, 2), cex = 0.8)
+dev.off()
 
 
