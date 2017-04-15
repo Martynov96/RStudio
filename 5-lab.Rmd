@@ -1,0 +1,120 @@
+---
+title: "5 lab"
+author: "Anton"
+date: '15 апреля 2017 г '
+output:
+  html_document: default
+---
+
+
+```{r pressure1, echo=TRUE}
+library('ISLR')              # набор данных Carseats
+library('GGally')            # матричные графики
+library('boot')              # расчёт ошибки с кросс-валидацией
+
+my.seed <- 1
+head(Carseats)
+
+# Метод проверочной выборки ====================================================
+
+# общее число наблюдений
+n <- nrow(Carseats)
+
+# доля обучающей выборки
+train.percent <- 0.5
+
+# выбрать наблюдения в обучающую выборку
+set.seed(my.seed)
+inTrain <- sample(n, n * train.percent)
+inTrain
+
+```
+
+Проверочная выборка
+
+```{r pressure, echo=TRUE}
+# описательные статистики по переменным
+attach(Carseats)
+# подгонка линейной модели на обучающей выборке
+fit.lm.1 <- lm(Sales ~ Price+Population+Urban, 
+               subset = inTrain)
+# считаем MSE на тестовой выборке
+mean((Sales[-inTrain] - predict(fit.lm.1,
+                              Carseats[-inTrain, ]))^2)
+# отсоединить таблицу с данными
+detach(Carseats)
+
+
+attach(Carseats)
+# подгонка линейной модели на обучающей выборке
+fit.lm.2 <- lm(Sales ~ Price+Population, 
+               subset = inTrain)
+# считаем MSE на тестовой выборке
+mean((Sales[-inTrain] - predict(fit.lm.2,
+                              Carseats[-inTrain, ]))^2)
+# отсоединить таблицу с данными
+detach(Carseats)
+
+
+# подгонка линейной модели на обучающей выборке
+fit.glm <- glm(Sales ~ Price+Population+Urban, data = Carseats)
+# считаем LOOCV-ошибку
+cv.err <- cv.glm(Carseats, fit.glm)
+# результат: первое число -- по формуле LOOCV-ошибки,
+#  второе -- с поправкой на смещение
+cv.err$delta[1]
+
+fit.glm.1 <- glm(Sales ~ Price+Population, data = Carseats)
+# считаем LOOCV-ошибку
+cv.err.1 <- cv.glm(Carseats, fit.glm.1)
+# результат: первое число -- по формуле LOOCV-ошибки,
+#  второе -- с поправкой на смещение
+cv.err.1$delta[1]
+```
+
+Перекрёстная проверка по отдельным наблюдениям
+
+```{r pressure2, echo=TRUE}
+cv.err.k.fold.11 <- cv.glm(Carseats, fit.glm,
+                          K = 5)$delta[1]
+cv.err.k.fold.12 <- cv.glm(Carseats, fit.glm,
+                             K = 10)$delta[1]
+cv.err.k.fold.11
+cv.err.k.fold.12
+
+
+cv.err.k.fold.21 <- cv.glm(Carseats, fit.glm.1,
+                          K = 5)$delta[1]
+cv.err.k.fold.22 <- cv.glm(Carseats, fit.glm.1,
+                             K = 10)$delta[1]
+cv.err.k.fold.21
+cv.err.k.fold.22
+```
+
+Бутстреп
+
+```{r pressure3, echo=TRUE}
+boot.fn <- function(data, index){
+  coef(lm(Sales ~ Price+Population+Urban, data = data, subset = index))
+}
+boot.fn(Carseats, 1:n)
+# применяем функцию boot для вычисления стандартных ошибок параметров
+boot(Carseats, boot.fn, 1000)
+
+boot.fn.1 <- function(data, index){
+  coef(lm(Sales ~ Price+Population, data = data, subset = index))
+}
+boot.fn.1(Carseats, 1:n)
+# применяем функцию boot для вычисления стандартных ошибок параметров
+boot(Carseats, boot.fn.1, 1000)
+
+attach(Carseats)
+summary(lm(Sales ~ Price+Population+Urban, data = Sales))$coef
+detach(Carseats)
+
+attach(Carseats)
+summary(lm(Sales ~ Price+Population, data = Sales))$coef
+detach(Carseats)
+```
+
+Оценки отличаются из-за МНК.
