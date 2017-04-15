@@ -1,0 +1,144 @@
+---
+title: "6lab"
+author: "Anton"
+date: '15 апреля 2017 г '
+output: html_document
+---
+
+```{r Подключение библиотек setup}
+library('ISLR')              # набор данных Hitters
+library('leaps')             # функция regsubset() -- отбор оптимального 
+                             #  подмножества переменных
+library('glmnet')            # функция glmnet() -- лассо
+library('pls')               # регрессия на главные компоненты -- pcr()
+
+my.seed <- 1
+
+
+```
+
+
+```{r 6.5.3 Нахождение оптимальной модели setup}
+
+# пошаговое включение
+regfit.fwd <- regsubsets(Sales ~ ., data = Carseats,
+                         nvmax = 10, method = 'forward')
+summary(regfit.fwd)
+
+# пошаговое исключение
+regfit.bwd <- regsubsets(Sales ~ ., data = Carseats,
+                         nvmax = 10, method = 'backward')
+summary(regfit.bwd)
+```
+
+```{r 6.5.2 Отбор путём пошагового включения и исключения переменных setup}
+# метод проверочной выборки ####################################################
+
+set.seed(my.seed)
+train <- sample(c(T, F), nrow(Carseats), rep = T)
+test <- !train
+
+# обучаем модели
+regfit.best <- regsubsets(Sales ~ ., data = Carseats[train, ],
+                          nvmax = 10)
+# матрица объясняющих переменных модели для тестовой выборки
+test.mat <- model.matrix(Sales ~ ., data = Carseats[test, ])
+
+# вектор ошибок
+val.errors <- rep(NA, 10)
+# цикл по количеству предикторов
+for (i in 1:10){
+    coefi <- coef(regfit.best, id = i)
+    pred <- test.mat[, names(coefi)] %*% coefi
+    # записываем значение MSE на тестовой выборке в вектор
+    val.errors[i] <- mean((Carseats$Sales[test] - pred)^2)
+}
+val.errors
+# находим число предикторов у оптимальной модели
+which.min(val.errors)
+### 9
+# коэффициенты оптимальной модели
+coef(regfit.best, 9)
+
+
+# функция для прогноза для функции regsubset()
+predict.regsubsets <- function(object, newdata, id, ...){
+    form <- as.formula(object$call[[2]])
+    mat <- model.matrix(form, newdata)
+    coefi <- coef(object, id = id)
+    xvars <- names(coefi)
+    mat[, xvars] %*% coefi
+}
+
+# набор с оптимальным количеством переменных на полном наборе данных
+regfit.best <- regsubsets(Sales ~ ., data = Carseats,
+                          nvmax = 10)
+coef(regfit.best, 10)
+
+# k-кратная кросс-валидация ####################################################
+k <- 10
+set.seed(my.seed)
+# отбираем 10 блоков наблюдений
+folds <- sample(1:k, nrow(Carseats), replace = T)
+# заготовка под матрицу с ошибками
+cv.errors <- matrix(NA, k, 10, dimnames = list(NULL, paste(1:10)))
+# заполняем матрицу в цикле по блокам данных
+for (j in 1:k){
+    best.fit <- regsubsets(Sales ~ ., data = Carseats[folds != j, ],
+                           nvmax = 10)
+    # теперь цикл по количеству объясняющих переменных
+    for (i in 1:10){
+        # модельные значения Salary
+        pred <- predict(best.fit, Carseats[folds == j, ], id = i)
+        # вписываем ошибку в матрицу
+        cv.errors[j, i] <- mean((Carseats$Sales[folds == j] - pred)^2)
+    }
+}
+# результат
+cv.errors
+
+# усредняем матрицу по каждому столбцу (т.е. по блокам наблюдений), 
+#  чтобы получить оценку MSE для каждой модели с фиксированным 
+#  количеством объясняющих переменных
+mean.cv.errors <- apply(cv.errors, 2, mean)
+
+# на графике
+plot(mean.cv.errors, type = 'b')
+points(which.min(mean.cv.errors), mean.cv.errors[which.min(mean.cv.errors)],
+       col = 'red', pch = 20, cex = 2)
+
+# перестраиваем модель с 7 объясняющими переменными на всём наборе данных
+reg.best <- regsubsets(Sales ~ ., data = Carseats, nvmax = 10)
+coef(reg.best, 7)
+
+```
+
+
+
+```{r 6.7.1 Регрессия на главные компоненты setup}
+# кросс-валидация ##############################################################
+set.seed(2)   # непонятно почему они сменили зерно; похоже, опечатка
+pcr.fit <- pcr(Sales ~ ., data = Carseats, scale = T, validation = 'CV')
+summary(pcr.fit)
+# график ошибок
+validationplot(pcr.fit, val.type = 'MSEP')
+
+# MSE на тестовой выборке
+x <- model.matrix(Sales ~ ., Carseats)[, -1]
+y <- Carseats$Sales
+set.seed(my.seed)
+train <- sample(1:nrow(x), nrow(x)/2)
+test <- -train
+y.test <- y[test]
+
+pcr.pred <- predict(pcr.fit, x[test, ], ncomp = 11)
+mean((pcr.pred - y.test)^2)
+
+# подгоняем модель на всей выборке для M = 11 
+#  (оптимально по методу перекрёстной проверки)
+pcr.fit <- pcr(y ~ x, scale = T, ncomp = 11)
+summary(pcr.fit)
+
+```
+
+Метод Регрессия на главные компоненты дал результат лучше, так как MSE на тестовой выборке у него меньше, чем у метода Отбор путём пошагового исключения.
