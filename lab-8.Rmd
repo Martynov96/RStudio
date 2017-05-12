@@ -1,0 +1,64 @@
+---
+title: "8lab"
+author: "Anton"
+date: '13 мая 2017 г '
+output: html_document
+---
+
+```{r Подключение библиотек setup}
+library('tree')
+library('ISLR')
+library('MASS')
+library('randomForest')
+library('gbm')
+
+attach(Auto)
+head(Auto)
+```
+
+```{r 6.5.3 Нахождение оптимальной модели setup}
+
+# делаем категориальную переменную "высокие продажи":
+#  Yes если продажи больше или равны 23 (тыс. шт.), No -- в противном случае
+high.mpg <- ifelse(mpg < 23, "No", "Yes")
+# присоединяем к таблице данных
+Auto <- data.frame(Auto, high.mpg)
+Auto <- Auto[,-1]
+Auto <- Auto[,-8]
+
+# строим дерево
+tree.auto <- tree(high.mpg ~ ., Auto)
+summary(tree.auto)
+
+# график результата
+plot(tree.auto)            # ветви
+text(tree.auto, pretty=0)  # подписи
+tree.auto                  # посмотреть всё дерево в консоли
+
+# ядро генератора случайных чисел
+set.seed(2)
+# обучающая выборка
+train <- sample(1:nrow(Auto), 196)
+# тестовая выборка
+auto.test <- Auto[-train,]
+high.test <- high.mpg[-train]
+
+# строим дерево на обучающей выборке
+tree.auto <- tree(high.mpg ~ ., Auto, subset = train)
+# делаем прогноз
+tree.pred <- predict(tree.auto, auto.test, type = "class")
+# матрица неточностей
+table(tree.pred, high.test)
+(98+76)/(98+16+6+76)  # обобщённая характеристика точности: доля верных прогнозов
+
+# случайный лес: ===============================================================
+#  берём по 6 предикторов на каждом шаге
+set.seed(1)
+rf.Auto <- randomForest(mpg ~ ., data = Auto, subset = train,
+                          mtry = 6, importance = TRUE)
+yhat.rf <- predict(rf.Auto, newdata = Auto[-train, ])
+mean((yhat.rf - auto.test)^2)
+# важность предикторов
+importance(rf.Auto)  # оценки 
+varImpPlot(rf.Auto)  # графики
+```
