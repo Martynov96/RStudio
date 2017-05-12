@@ -1,3 +1,4 @@
+#библиотеки
 library('e1071')     # SVM
 library('ROCR')      # ROC-кривые
 library('ISLR')      # данные по экспрессии генов
