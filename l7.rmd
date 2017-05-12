@@ -1,0 +1,80 @@
+library('ISLR')              
+library('splines')           
+library('gam')              
+library('akima')             
+library('MASS') 
+data(Boston)
+Boston
+
+my.seed <- 1
+
+attach(Boston)
+
+# границы изменения переменной dis
+agelims <- range(dis)
+# значения dis, для которых делаем прогноз (от min до max с шагом 1)
+age.grid <- seq(from = agelims[1], to = agelims[2])
+
+
+
+
+
+# Ступенчатые функции ----------------------------------------------------------
+# нарезаем предиктор dis на 4 равных интервала
+table(cut(age, 4))
+
+# подгоняем линейную модель на интервалах
+fit <- lm(wage ~ cut(age, 4), data = Wage)
+coef(summary(fit))
+
+# кубический сплайн с тремя узлами
+fit <- lm(wage ~ bs(age, knots = c(25, 40, 60)), data = Wage)
+# прогноз
+preds <- predict(fit, newdata = list(age = age.grid), se = T)
+
+# график сравнения кубического и натурального сплайнов #########################
+par(mfrow = c(1, 1), mar = c(4.5, 4.5, 1, 8.5), 
+    oma = c(0, 0, 0, 0), xpd = T)
+# наблюдения
+plot(age, wage, col = 'grey')
+# модель
+lines(age.grid, preds$fit, lwd = 2)
+# доверительный интервал
+lines(age.grid, preds$fit + 2*preds$se, lty = 'dashed')
+lines(age.grid, preds$fit - 2*preds$se, lty = 'dashed')
+
+# три узла -- это 6 степеней свободы
+dim(bs(age, knots = c(25, 40, 60)))
+dim(bs(age, df = 6))
+# если задать только степени свободы, функция bs() распределяет узлы равномерно
+#  в данном случае узлы -- квартили распределения age
+attr(bs(age, df = 6), 'knots')
+
+# натуральный сплайн
+fit2 <- lm(wage ~ ns(age, df = 4), data = Wage)
+preds2 <- predict(fit2, newdata = list(age = age.grid), se = T)
+lines(age.grid, preds2$fit, col = 'red', lwd = 2)
+legend("topright", inset = c(-1.15, 0),
+       c('Кубический \n с 3 узлами', 'Натуральный'),
+       lwd = rep(2, 2), col = c('black', 'red'))
+
+# график со слайда 20 (рис. 7.8) ###############################################
+
+par(mfrow = c(1, 1), mar = c(4.5, 4.5, 1, 1), oma = c(0, 0, 4, 0))
+# наблюдения
+plot(age, wage, xlim = agelims, cex = 0.5, col = 'darkgrey')
+# заголовок
+title('Сглаживающий сплайн')
+# подгоняем модель с 16 степенями свободы
+fit <- smooth.spline(age, wage, df = 16)
+# подгоняем модель с подбором лямбды с помощью перекрёстной проверки
+fit2 <- smooth.spline(age, wage, cv = T)
+fit2$df
+# рисуем модель
+lines(fit, col = 'red', lwd = 2)
+lines(fit2, col = 'blue', lwd = 2)
+legend('topright', 
+       c('16 df', '6.8 df'),
+       col = c('red', 'blue'), lty = 1, lwd = 2, cex = 0.8)
+
+
