@@ -1,0 +1,93 @@
+---
+title: "7-lab"
+author: "Anton"
+date: '15 мая 2017 г '
+output: html_document
+---
+
+```{r cars}
+
+library('MASS')              # набор данных Auto
+library('splines')           # сплайны
+library('gam')               # обобщённые аддитивные модели
+library('akima')             # график двумерной плоскости
+
+
+my.seed <- 1
+
+table(cut(dis, 4))
+
+# подгоняем линейную модель на интервалах
+fit <- lm(nox ~ cut(dis, 4), data = Boston)
+coef(summary(fit))
+
+
+
+head(cut(dis, 4))
+
+# можно получить сами значения dis в заданных степенях
+head(cut(dis, 4, raw = T))
+
+# на прогноз не повлияет, но оценки параметров изменяются
+fit.2 <- lm(nox ~ cut(dis, 4, raw = T), data = Boston)
+coef(summary(fit.2))
+
+# границы изменения переменной dis
+agelims <- range(dis)
+# значения dis, для которых делаем прогноз (от min до max с шагом 1)
+age.grid <- seq(from = agelims[1], to = agelims[2])
+# рассчитать прогнозы и их стандартные ошибки
+preds <- predict(fit, newdata = list(dis = age.grid), type = "response", se = TRUE)
+# границы доверительного интервала
+se.bands <- cbind(preds$fit + 2*preds$se.fit,
+                  preds$fit - 2*preds$se.fit)
+
+
+par(mfrow = c(1, 2), mar = c(4.5, 4.5, 1, 1), oma = c(0, 0, 4, 0))
+# наблюдения
+plot(dis, nox, xlim = agelims, cex = 0.5, col = 'darkgrey')
+# заголовок
+title('Полином ', outer = T)
+# модель
+lines(age.grid, preds$fit, lwd = 2, col = 'blue')
+# доверительные интервалы прогноза
+matlines(age.grid, se.bands, lwd = 1, col = 'blue', lty = 3)
+
+# прогнозы по моделям с различными вызовами cut() совпадают
+preds2 <- predict(fit.2, newdata = list(dis = age.grid), se = T)
+max(abs(preds$fit - preds2$fit))
+
+# подбираем степень полинома, сравнивая модели со степенями от 1 до 5 
+#  с помощью дисперсионного анализа (ANOVA)
+fit.1 <- lm(nox ~ dis, data = Boston)
+fit.2 <- lm(nox ~ cut(dis, 2), data = Boston)
+fit.3 <- lm(nox ~ cut(dis, 3), data = Boston)
+fit.4 <- lm(nox ~ cut(dis, 4), data = Boston)
+fit.5 <- lm(nox ~ cut(dis, 5), data = Boston)
+
+anova(fit.1, fit.2, fit.3, fit.4, fit.5)
+
+
+
+# подгоняем логистическую регрессию
+fit <- glm(I(nox > 0.8) ~ cut(dis, 4), data = Boston, family = 'binomial')
+# прогнозы
+preds <- predict(fit, newdata = list(dis = age.grid), se = T)
+# пересчитываем доверительные интервалы и прогнозы в исходные ЕИ
+pfit <- exp(preds$fit) / (1 + exp(preds$fit))
+se.bands.logit <- cbind(preds$fit + 2*preds$se.fit,
+                        preds$fit - 2*preds$se.fit)
+se.bands <- exp(se.bands.logit)/(1 + exp(se.bands.logit))
+
+
+# сетка для графика (изображаем вероятности, поэтому интервал изменения y мал)
+plot(dis, I(nox > 0.8), xlim = agelims, type = 'n', ylim = c(0, 0.2))
+# фактические наблюдения показываем засечками
+points(jitter(dis), I((nox > 0.8) / 5), cex = 0.5, pch = '|', col = 'darkgrey')
+# модель
+lines(age.grid, pfit, lwd = 2, col = 'blue')
+# доверительные интервалы
+matlines(age.grid, se.bands, lwd = 1, col = 'blue', lty = 3)
+
+
+```
