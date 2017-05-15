@@ -48,16 +48,21 @@ tree.pred <- predict(tree.auto, auto.test, type = "class")
 table(tree.pred, high.test)
 (98+76)/(98+16+6+76)  # обобщённая характеристика точности: доля верных прогнозов
 
-yhat.rf <- predict(rf.Auto, newdata = Auto[-train, ], type = 'class')
-Auto.test <- Auto[-inTrain, "high.mpg"]
+set.seed(1)
+rf.Auto <- randomForest(mpg ~ ., data = Auto, subset = train,
+                        mtry = 6, importance = TRUE)
 
-min <- c(500,mean((yhat.rf - Auto.test)^2))
+yhat.rf <- predict(rf.Auto, newdata = Auto[-train, ], type = 'class')
+
+Auto.test <- Auto[-train, "high.mpg"]
+
+min <- c(500, table(yhat.rf, auto.test))
 for (i in c(1:100,250,1000,5000)){
   set.seed(1)
   rf.Auto <- randomForest(mpg ~ ., data = Auto, subset = train,
-                         mtry = i, importance = TRUE)
-  yhat.rf <- predict(rf.Auto, newdata = Auto[-inTrain, ])
-  mi <- mean((yhat.rf - Auto.test)^2)
+                          mtry = i, importance = TRUE)
+  yhat.rf <- predict(rf.Auto, newdata = Auto[-train, ], type = 'class')
+  mi <- table(yhat.rf, auto.test)
   if (mi<min[2])min <- c(i,mi)
 }
 
@@ -75,6 +80,7 @@ table(yhat.rf, auto.test)
 # важность предикторов
 importance(rf.Auto)  # оценки 
 varImpPlot(rf.Auto)  # графики
+
 
 
 ```
