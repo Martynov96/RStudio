@@ -1,0 +1,2507 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Anton" />
+
+
+<title>lab5</title>
+
+<script src="lab5_files/jquery-1.12.4/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="lab5_files/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
+<script src="lab5_files/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="lab5_files/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="lab5_files/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="lab5_files/navigation-1.1/tabsets.js"></script>
+<link href="lab5_files/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<script src="lab5_files/highlightjs-9.12.0/highlight.js"></script>
+<script src="lab5_files/htmlwidgets-1.0/htmlwidgets.js"></script>
+<link href="lab5_files/leaflet-0.7.7/leaflet.css" rel="stylesheet" />
+<script src="lab5_files/leaflet-0.7.7/leaflet.js"></script>
+<link href="lab5_files/leafletfix-1.0.0/leafletfix.css" rel="stylesheet" />
+<link href="lab5_files/leaflet-label-0.2.2/leaflet.label.css" rel="stylesheet" />
+<script src="lab5_files/leaflet-label-0.2.2/leaflet.label.js"></script>
+<script src="lab5_files/Proj4Leaflet-0.7.2/proj4-compressed.js"></script>
+<script src="lab5_files/Proj4Leaflet-0.7.2/proj4leaflet.js"></script>
+<script src="lab5_files/leaflet-binding-1.1.0/leaflet.js"></script>
+<link href="lab5_files/leaflet-markercluster-0.5.0/MarkerCluster.css" rel="stylesheet" />
+<link href="lab5_files/leaflet-markercluster-0.5.0/MarkerCluster.Default.css" rel="stylesheet" />
+<script src="lab5_files/leaflet-markercluster-0.5.0/leaflet.markercluster.js"></script>
+<script src="lab5_files/leaflet-markercluster-0.5.0/leaflet.markercluster.layersupport-src.js"></script>
+<script src="lab5_files/leaflet-markercluster-0.5.0/leaflet.markercluster.freezable-src.js"></script>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">lab5</h1>
+<h4 class="author"><em>Anton</em></h4>
+<h4 class="date"><em>10 Апрель, 2018</em></h4>
+
+</div>
+
+
+<div class="section level2">
+<h2>Задание</h2>
+<p>Интерактивная карта-хороплет стран мира (GVis), показатель – любой из раздела «Environment» (Окружающая среда) базы Всемирного банка.</p>
+</div>
+<div id="-" class="section level1">
+<h1>Интерактивная картограмма</h1>
+<pre class="r"><code>library(&#39;WDI&#39;)
+library(&#39;googleVis&#39;)
+library(&#39;data.table&#39;)
+
+# пакет с API для WorldBank
+# загрузка данных по всем странам, 2014 год, показатель
+# Access to electricity (% of population)
+dat &lt;- WDI(indicator = &#39;EG.ELC.ACCS.ZS&#39;, start = 2014, end = 2014)
+DT &lt;- data.table(country = dat$country, value = dat$EG.ELC.ACCS.ZS)
+# объект: таблица исходных данных
+g.tbl &lt;- gvisTable(data = DT, 
+                   options = list(width = 220, height = 400))
+# объект: интерактивная карта
+g.chart &lt;- gvisGeoChart(data = DT, 
+                        locationvar = &#39;country&#39;, 
+                        colorvar = &#39;value&#39;, 
+                        options = list(width = 600, 
+                                       height = 400, 
+                                       dataMode = &#39;regions&#39;))
+# размещаем таблицу и карту на одной панели (слева направо)
+TG &lt;- gvisMerge(g.tbl, g.chart, 
+                horizontal = TRUE, 
+                tableOptions = &#39;bgcolor=\&quot;#CCCCCC\&quot; cellspacing=10&#39;)
+
+# вставляем результат в html-документ
+print(TG, &#39;chart&#39;)</code></pre>
+<!-- Table generated in R 3.4.3 by googleVis 0.6.3 package -->
+<!-- Tue Apr 10 11:32:30 2018 -->
+<!-- jsHeader -->
+<script type="text/javascript">
+ 
+// jsData 
+function gvisDataTableID111c55945ca4 () {
+var data = new google.visualization.DataTable();
+var datajson =
+[
+ [
+"Arab World",
+88.03912475
+],
+[
+"Caribbean small states",
+96.82753264
+],
+[
+"Central Europe and the Baltics",
+100
+],
+[
+"Early-demographic dividend",
+82.78608564
+],
+[
+"East Asia & Pacific",
+96.55923054
+],
+[
+"East Asia & Pacific (excluding high income)",
+96.18431783
+],
+[
+"East Asia & Pacific (IDA & IBRD countries)",
+96.98624003
+],
+[
+"Euro area",
+100
+],
+[
+"Europe & Central Asia",
+99.99861278
+],
+[
+"Europe & Central Asia (excluding high income)",
+99.99696318
+],
+[
+"Europe & Central Asia (IDA & IBRD countries)",
+99.9972194
+],
+[
+"European Union",
+100
+],
+[
+"Fragile and conflict affected situations",
+46.58657808
+],
+[
+"Heavily indebted poor countries (HIPC)",
+33.400313
+],
+[
+"High income",
+99.99799286
+],
+[
+"IBRD only",
+92.76891531
+],
+[
+"IDA & IBRD total",
+82.87294515
+],
+[
+"IDA blend",
+72.09429802
+],
+[
+"IDA only",
+42.90769288
+],
+[
+"IDA total",
+52.56078059
+],
+[
+"Late-demographic dividend",
+98.89626141
+],
+[
+"Latin America & Caribbean",
+97.02434931
+],
+[
+"Latin America & Caribbean (excluding high income)",
+96.89222962
+],
+[
+"Latin America & the Caribbean (IDA & IBRD countries)",
+96.94645114
+],
+[
+"Least developed countries: UN classification",
+38.28506978
+],
+[
+"Low & middle income",
+82.53877754
+],
+[
+"Low income",
+28.38773936
+],
+[
+"Lower middle income",
+79.53789061
+],
+[
+"Middle East & North Africa",
+96.9899846
+],
+[
+"Middle East & North Africa (excluding high income)",
+96.49027289
+],
+[
+"Middle East & North Africa (IDA & IBRD countries)",
+96.44922923
+],
+[
+"Middle income",
+88.72336799
+],
+[
+"North America",
+100
+],
+[
+"Not classified",
+null
+],
+[
+"OECD members",
+99.91930199
+],
+[
+"Other small states",
+70.04499935
+],
+[
+"Pacific island small states",
+72.33384136
+],
+[
+"Post-demographic dividend",
+99.99967811
+],
+[
+"Pre-demographic dividend",
+38.7542976
+],
+[
+"Small states",
+75.19847032
+],
+[
+"South Asia",
+80.05705666
+],
+[
+"South Asia (IDA & IBRD)",
+80.05705666
+],
+[
+"Sub-Saharan Africa",
+37.44251396
+],
+[
+"Sub-Saharan Africa (excluding high income)",
+37.43671828
+],
+[
+"Sub-Saharan Africa (IDA & IBRD countries)",
+37.44251396
+],
+[
+"Upper middle income",
+99.30922511
+],
+[
+"World",
+85.31517974
+],
+[
+"Afghanistan",
+89.5
+],
+[
+"Albania",
+100
+],
+[
+"Algeria",
+100
+],
+[
+"American Samoa",
+null
+],
+[
+"Andorra",
+100
+],
+[
+"Angola",
+32
+],
+[
+"Antigua and Barbuda",
+96.44298553
+],
+[
+"Argentina",
+100
+],
+[
+"Armenia",
+100
+],
+[
+"Aruba",
+94.46832275
+],
+[
+"Australia",
+100
+],
+[
+"Austria",
+100
+],
+[
+"Azerbaijan",
+100
+],
+[
+"Bahamas, The",
+100
+],
+[
+"Bahrain",
+100
+],
+[
+"Bangladesh",
+62.4
+],
+[
+"Barbados",
+100
+],
+[
+"Belarus",
+100
+],
+[
+"Belgium",
+100
+],
+[
+"Belize",
+92.45124817
+],
+[
+"Benin",
+34.1
+],
+[
+"Bermuda",
+100
+],
+[
+"Bhutan",
+100
+],
+[
+"Bolivia",
+90.038729
+],
+[
+"Bosnia and Herzegovina",
+100
+],
+[
+"Botswana",
+56.48230362
+],
+[
+"Brazil",
+99.650247
+],
+[
+"British Virgin Islands",
+null
+],
+[
+"Brunei Darussalam",
+100
+],
+[
+"Bulgaria",
+100
+],
+[
+"Burkina Faso",
+19.2
+],
+[
+"Burundi",
+7
+],
+[
+"Cabo Verde",
+90.18797302
+],
+[
+"Cambodia",
+56.1
+],
+[
+"Cameroon",
+56.8
+],
+[
+"Canada",
+100
+],
+[
+"Cayman Islands",
+100
+],
+[
+"Central African Republic",
+12.32972527
+],
+[
+"Chad",
+8.017625809
+],
+[
+"Channel Islands",
+100
+],
+[
+"Chile",
+100
+],
+[
+"China",
+100
+],
+[
+"Colombia",
+97.790938
+],
+[
+"Comoros",
+73.76432037
+],
+[
+"Congo, Dem. Rep.",
+13.5
+],
+[
+"Congo, Rep.",
+43.16096115
+],
+[
+"Costa Rica",
+99.359291
+],
+[
+"Cote d'Ivoire",
+61.9
+],
+[
+"Croatia",
+100
+],
+[
+"Cuba",
+100
+],
+[
+"Curacao",
+100
+],
+[
+"Cyprus",
+100
+],
+[
+"Czech Republic",
+100
+],
+[
+"Denmark",
+100
+],
+[
+"Djibouti",
+46.72739792
+],
+[
+"Dominica",
+100
+],
+[
+"Dominican Republic",
+98.470979
+],
+[
+"Ecuador",
+98.976067
+],
+[
+"Egypt, Arab Rep.",
+99.8
+],
+[
+"El Salvador",
+95.125416
+],
+[
+"Equatorial Guinea",
+67.56137085
+],
+[
+"Eritrea",
+45.8334198
+],
+[
+"Estonia",
+100
+],
+[
+"Ethiopia",
+27.2
+],
+[
+"Faroe Islands",
+null
+],
+[
+"Fiji",
+100
+],
+[
+"Finland",
+100
+],
+[
+"France",
+100
+],
+[
+"French Polynesia",
+100
+],
+[
+"Gabon",
+89.49419403
+],
+[
+"Gambia, The",
+47.21051407
+],
+[
+"Georgia",
+100
+],
+[
+"Germany",
+100
+],
+[
+"Ghana",
+78.3
+],
+[
+"Gibraltar",
+100
+],
+[
+"Greece",
+100
+],
+[
+"Greenland",
+100
+],
+[
+"Grenada",
+90.8073349
+],
+[
+"Guam",
+100
+],
+[
+"Guatemala",
+85.494371
+],
+[
+"Guinea",
+27.64126778
+],
+[
+"Guinea-Bissau",
+17.2
+],
+[
+"Guyana",
+86.9
+],
+[
+"Haiti",
+37.94010925
+],
+[
+"Honduras",
+88.653773
+],
+[
+"Hong Kong SAR, China",
+100
+],
+[
+"Hungary",
+100
+],
+[
+"Iceland",
+100
+],
+[
+"India",
+79.16925812
+],
+[
+"Indonesia",
+97.01
+],
+[
+"Iran, Islamic Rep.",
+99.44168091
+],
+[
+"Iraq",
+98.79060364
+],
+[
+"Ireland",
+100
+],
+[
+"Isle of Man",
+100
+],
+[
+"Israel",
+100
+],
+[
+"Italy",
+100
+],
+[
+"Jamaica",
+97.09738922
+],
+[
+"Japan",
+100
+],
+[
+"Jordan",
+100
+],
+[
+"Kazakhstan",
+100
+],
+[
+"Kenya",
+36
+],
+[
+"Kiribati",
+48.07851791
+],
+[
+"Korea, Dem. PeopleвЂ™s Rep.",
+32.37274933
+],
+[
+"Korea, Rep.",
+100
+],
+[
+"Kosovo",
+100
+],
+[
+"Kuwait",
+100
+],
+[
+"Kyrgyz Republic",
+99.8
+],
+[
+"Lao PDR",
+78.08850098
+],
+[
+"Latvia",
+100
+],
+[
+"Lebanon",
+100
+],
+[
+"Lesotho",
+27.8
+],
+[
+"Liberia",
+9.140634537
+],
+[
+"Libya",
+98.44602966
+],
+[
+"Liechtenstein",
+100
+],
+[
+"Lithuania",
+100
+],
+[
+"Luxembourg",
+100
+],
+[
+"Macao SAR, China",
+100
+],
+[
+"Macedonia, FYR",
+100
+],
+[
+"Madagascar",
+16.81898117
+],
+[
+"Malawi",
+11.9
+],
+[
+"Malaysia",
+100
+],
+[
+"Maldives",
+100
+],
+[
+"Mali",
+27.29314041
+],
+[
+"Malta",
+100
+],
+[
+"Marshall Islands",
+90.01979065
+],
+[
+"Mauritania",
+38.8
+],
+[
+"Mauritius",
+99.16617584
+],
+[
+"Mexico",
+99.172928
+],
+[
+"Micronesia, Fed. Sts.",
+71.69416046
+],
+[
+"Moldova",
+100
+],
+[
+"Monaco",
+100
+],
+[
+"Mongolia",
+85.56769562
+],
+[
+"Montenegro",
+100
+],
+[
+"Morocco",
+91.6
+],
+[
+"Mozambique",
+21.21998405
+],
+[
+"Myanmar",
+52
+],
+[
+"Namibia",
+49.56378174
+],
+[
+"Nauru",
+99.21439362
+],
+[
+"Nepal",
+84.9
+],
+[
+"Netherlands",
+100
+],
+[
+"New Caledonia",
+100
+],
+[
+"New Zealand",
+100
+],
+[
+"Nicaragua",
+81.853073
+],
+[
+"Niger",
+14.3096447
+],
+[
+"Nigeria",
+57.65213776
+],
+[
+"Northern Mariana Islands",
+100
+],
+[
+"Norway",
+100
+],
+[
+"Oman",
+100
+],
+[
+"Pakistan",
+97.53484344
+],
+[
+"Palau",
+99.8103
+],
+[
+"Panama",
+91.59696198
+],
+[
+"Papua New Guinea",
+20.26445007
+],
+[
+"Paraguay",
+99.000716
+],
+[
+"Peru",
+92.919989
+],
+[
+"Philippines",
+89.12577057
+],
+[
+"Poland",
+100
+],
+[
+"Portugal",
+100
+],
+[
+"Puerto Rico",
+100
+],
+[
+"Qatar",
+100
+],
+[
+"Romania",
+100
+],
+[
+"Russian Federation",
+100
+],
+[
+"Rwanda",
+19.8
+],
+[
+"Samoa",
+97.9
+],
+[
+"San Marino",
+100
+],
+[
+"Sao Tome and Principe",
+68.6
+],
+[
+"Saudi Arabia",
+100
+],
+[
+"Senegal",
+61
+],
+[
+"Serbia",
+100
+],
+[
+"Seychelles",
+99.54418182
+],
+[
+"Sierra Leone",
+13.09699154
+],
+[
+"Singapore",
+100
+],
+[
+"Sint Maarten (Dutch part)",
+100
+],
+[
+"Slovak Republic",
+100
+],
+[
+"Slovenia",
+100
+],
+[
+"Solomon Islands",
+35.11455917
+],
+[
+"Somalia",
+19.05978203
+],
+[
+"South Africa",
+86
+],
+[
+"South Sudan",
+4.530425072
+],
+[
+"Spain",
+100
+],
+[
+"Sri Lanka",
+92.19124603
+],
+[
+"St. Kitts and Nevis",
+100
+],
+[
+"St. Lucia",
+98.16381073
+],
+[
+"St. Martin (French part)",
+100
+],
+[
+"St. Vincent and the Grenadines",
+99.02001953
+],
+[
+"Sudan",
+44.9
+],
+[
+"Suriname",
+100
+],
+[
+"Swaziland",
+65
+],
+[
+"Sweden",
+100
+],
+[
+"Switzerland",
+100
+],
+[
+"Syrian Arab Republic",
+95.84322357
+],
+[
+"Tajikistan",
+99.98976135
+],
+[
+"Tanzania",
+15.50144958
+],
+[
+"Thailand",
+100
+],
+[
+"Timor-Leste",
+45.38023758
+],
+[
+"Togo",
+45.7
+],
+[
+"Tonga",
+95.25174713
+],
+[
+"Trinidad and Tobago",
+100
+],
+[
+"Tunisia",
+99.8
+],
+[
+"Turkey",
+100
+],
+[
+"Turkmenistan",
+100
+],
+[
+"Turks and Caicos Islands",
+94.98634338
+],
+[
+"Tuvalu",
+98.53022003
+],
+[
+"Uganda",
+20.4
+],
+[
+"Ukraine",
+100
+],
+[
+"United Arab Emirates",
+100
+],
+[
+"United Kingdom",
+100
+],
+[
+"United States",
+100
+],
+[
+"Uruguay",
+99.657085
+],
+[
+"Uzbekistan",
+100
+],
+[
+"Vanuatu",
+34.46945572
+],
+[
+"Venezuela, RB",
+99.10779572
+],
+[
+"Vietnam",
+99.2
+],
+[
+"Virgin Islands (U.S.)",
+100
+],
+[
+"West Bank and Gaza",
+99.9
+],
+[
+"Yemen, Rep.",
+72.04101562
+],
+[
+"Zambia",
+27.9
+],
+[
+"Zimbabwe",
+32.3
+] 
+];
+data.addColumn('string','country');
+data.addColumn('number','value');
+data.addRows(datajson);
+return(data);
+}
+
+
+// jsData 
+function gvisDataGeoChartID111c6478d1a () {
+var data = new google.visualization.DataTable();
+var datajson =
+[
+ [
+"Arab World",
+88.03912475
+],
+[
+"Caribbean small states",
+96.82753264
+],
+[
+"Central Europe and the Baltics",
+100
+],
+[
+"Early-demographic dividend",
+82.78608564
+],
+[
+"East Asia & Pacific",
+96.55923054
+],
+[
+"East Asia & Pacific (excluding high income)",
+96.18431783
+],
+[
+"East Asia & Pacific (IDA & IBRD countries)",
+96.98624003
+],
+[
+"Euro area",
+100
+],
+[
+"Europe & Central Asia",
+99.99861278
+],
+[
+"Europe & Central Asia (excluding high income)",
+99.99696318
+],
+[
+"Europe & Central Asia (IDA & IBRD countries)",
+99.9972194
+],
+[
+"European Union",
+100
+],
+[
+"Fragile and conflict affected situations",
+46.58657808
+],
+[
+"Heavily indebted poor countries (HIPC)",
+33.400313
+],
+[
+"High income",
+99.99799286
+],
+[
+"IBRD only",
+92.76891531
+],
+[
+"IDA & IBRD total",
+82.87294515
+],
+[
+"IDA blend",
+72.09429802
+],
+[
+"IDA only",
+42.90769288
+],
+[
+"IDA total",
+52.56078059
+],
+[
+"Late-demographic dividend",
+98.89626141
+],
+[
+"Latin America & Caribbean",
+97.02434931
+],
+[
+"Latin America & Caribbean (excluding high income)",
+96.89222962
+],
+[
+"Latin America & the Caribbean (IDA & IBRD countries)",
+96.94645114
+],
+[
+"Least developed countries: UN classification",
+38.28506978
+],
+[
+"Low & middle income",
+82.53877754
+],
+[
+"Low income",
+28.38773936
+],
+[
+"Lower middle income",
+79.53789061
+],
+[
+"Middle East & North Africa",
+96.9899846
+],
+[
+"Middle East & North Africa (excluding high income)",
+96.49027289
+],
+[
+"Middle East & North Africa (IDA & IBRD countries)",
+96.44922923
+],
+[
+"Middle income",
+88.72336799
+],
+[
+"North America",
+100
+],
+[
+"Not classified",
+null
+],
+[
+"OECD members",
+99.91930199
+],
+[
+"Other small states",
+70.04499935
+],
+[
+"Pacific island small states",
+72.33384136
+],
+[
+"Post-demographic dividend",
+99.99967811
+],
+[
+"Pre-demographic dividend",
+38.7542976
+],
+[
+"Small states",
+75.19847032
+],
+[
+"South Asia",
+80.05705666
+],
+[
+"South Asia (IDA & IBRD)",
+80.05705666
+],
+[
+"Sub-Saharan Africa",
+37.44251396
+],
+[
+"Sub-Saharan Africa (excluding high income)",
+37.43671828
+],
+[
+"Sub-Saharan Africa (IDA & IBRD countries)",
+37.44251396
+],
+[
+"Upper middle income",
+99.30922511
+],
+[
+"World",
+85.31517974
+],
+[
+"Afghanistan",
+89.5
+],
+[
+"Albania",
+100
+],
+[
+"Algeria",
+100
+],
+[
+"American Samoa",
+null
+],
+[
+"Andorra",
+100
+],
+[
+"Angola",
+32
+],
+[
+"Antigua and Barbuda",
+96.44298553
+],
+[
+"Argentina",
+100
+],
+[
+"Armenia",
+100
+],
+[
+"Aruba",
+94.46832275
+],
+[
+"Australia",
+100
+],
+[
+"Austria",
+100
+],
+[
+"Azerbaijan",
+100
+],
+[
+"Bahamas, The",
+100
+],
+[
+"Bahrain",
+100
+],
+[
+"Bangladesh",
+62.4
+],
+[
+"Barbados",
+100
+],
+[
+"Belarus",
+100
+],
+[
+"Belgium",
+100
+],
+[
+"Belize",
+92.45124817
+],
+[
+"Benin",
+34.1
+],
+[
+"Bermuda",
+100
+],
+[
+"Bhutan",
+100
+],
+[
+"Bolivia",
+90.038729
+],
+[
+"Bosnia and Herzegovina",
+100
+],
+[
+"Botswana",
+56.48230362
+],
+[
+"Brazil",
+99.650247
+],
+[
+"British Virgin Islands",
+null
+],
+[
+"Brunei Darussalam",
+100
+],
+[
+"Bulgaria",
+100
+],
+[
+"Burkina Faso",
+19.2
+],
+[
+"Burundi",
+7
+],
+[
+"Cabo Verde",
+90.18797302
+],
+[
+"Cambodia",
+56.1
+],
+[
+"Cameroon",
+56.8
+],
+[
+"Canada",
+100
+],
+[
+"Cayman Islands",
+100
+],
+[
+"Central African Republic",
+12.32972527
+],
+[
+"Chad",
+8.017625809
+],
+[
+"Channel Islands",
+100
+],
+[
+"Chile",
+100
+],
+[
+"China",
+100
+],
+[
+"Colombia",
+97.790938
+],
+[
+"Comoros",
+73.76432037
+],
+[
+"Congo, Dem. Rep.",
+13.5
+],
+[
+"Congo, Rep.",
+43.16096115
+],
+[
+"Costa Rica",
+99.359291
+],
+[
+"Cote d'Ivoire",
+61.9
+],
+[
+"Croatia",
+100
+],
+[
+"Cuba",
+100
+],
+[
+"Curacao",
+100
+],
+[
+"Cyprus",
+100
+],
+[
+"Czech Republic",
+100
+],
+[
+"Denmark",
+100
+],
+[
+"Djibouti",
+46.72739792
+],
+[
+"Dominica",
+100
+],
+[
+"Dominican Republic",
+98.470979
+],
+[
+"Ecuador",
+98.976067
+],
+[
+"Egypt, Arab Rep.",
+99.8
+],
+[
+"El Salvador",
+95.125416
+],
+[
+"Equatorial Guinea",
+67.56137085
+],
+[
+"Eritrea",
+45.8334198
+],
+[
+"Estonia",
+100
+],
+[
+"Ethiopia",
+27.2
+],
+[
+"Faroe Islands",
+null
+],
+[
+"Fiji",
+100
+],
+[
+"Finland",
+100
+],
+[
+"France",
+100
+],
+[
+"French Polynesia",
+100
+],
+[
+"Gabon",
+89.49419403
+],
+[
+"Gambia, The",
+47.21051407
+],
+[
+"Georgia",
+100
+],
+[
+"Germany",
+100
+],
+[
+"Ghana",
+78.3
+],
+[
+"Gibraltar",
+100
+],
+[
+"Greece",
+100
+],
+[
+"Greenland",
+100
+],
+[
+"Grenada",
+90.8073349
+],
+[
+"Guam",
+100
+],
+[
+"Guatemala",
+85.494371
+],
+[
+"Guinea",
+27.64126778
+],
+[
+"Guinea-Bissau",
+17.2
+],
+[
+"Guyana",
+86.9
+],
+[
+"Haiti",
+37.94010925
+],
+[
+"Honduras",
+88.653773
+],
+[
+"Hong Kong SAR, China",
+100
+],
+[
+"Hungary",
+100
+],
+[
+"Iceland",
+100
+],
+[
+"India",
+79.16925812
+],
+[
+"Indonesia",
+97.01
+],
+[
+"Iran, Islamic Rep.",
+99.44168091
+],
+[
+"Iraq",
+98.79060364
+],
+[
+"Ireland",
+100
+],
+[
+"Isle of Man",
+100
+],
+[
+"Israel",
+100
+],
+[
+"Italy",
+100
+],
+[
+"Jamaica",
+97.09738922
+],
+[
+"Japan",
+100
+],
+[
+"Jordan",
+100
+],
+[
+"Kazakhstan",
+100
+],
+[
+"Kenya",
+36
+],
+[
+"Kiribati",
+48.07851791
+],
+[
+"Korea, Dem. PeopleвЂ™s Rep.",
+32.37274933
+],
+[
+"Korea, Rep.",
+100
+],
+[
+"Kosovo",
+100
+],
+[
+"Kuwait",
+100
+],
+[
+"Kyrgyz Republic",
+99.8
+],
+[
+"Lao PDR",
+78.08850098
+],
+[
+"Latvia",
+100
+],
+[
+"Lebanon",
+100
+],
+[
+"Lesotho",
+27.8
+],
+[
+"Liberia",
+9.140634537
+],
+[
+"Libya",
+98.44602966
+],
+[
+"Liechtenstein",
+100
+],
+[
+"Lithuania",
+100
+],
+[
+"Luxembourg",
+100
+],
+[
+"Macao SAR, China",
+100
+],
+[
+"Macedonia, FYR",
+100
+],
+[
+"Madagascar",
+16.81898117
+],
+[
+"Malawi",
+11.9
+],
+[
+"Malaysia",
+100
+],
+[
+"Maldives",
+100
+],
+[
+"Mali",
+27.29314041
+],
+[
+"Malta",
+100
+],
+[
+"Marshall Islands",
+90.01979065
+],
+[
+"Mauritania",
+38.8
+],
+[
+"Mauritius",
+99.16617584
+],
+[
+"Mexico",
+99.172928
+],
+[
+"Micronesia, Fed. Sts.",
+71.69416046
+],
+[
+"Moldova",
+100
+],
+[
+"Monaco",
+100
+],
+[
+"Mongolia",
+85.56769562
+],
+[
+"Montenegro",
+100
+],
+[
+"Morocco",
+91.6
+],
+[
+"Mozambique",
+21.21998405
+],
+[
+"Myanmar",
+52
+],
+[
+"Namibia",
+49.56378174
+],
+[
+"Nauru",
+99.21439362
+],
+[
+"Nepal",
+84.9
+],
+[
+"Netherlands",
+100
+],
+[
+"New Caledonia",
+100
+],
+[
+"New Zealand",
+100
+],
+[
+"Nicaragua",
+81.853073
+],
+[
+"Niger",
+14.3096447
+],
+[
+"Nigeria",
+57.65213776
+],
+[
+"Northern Mariana Islands",
+100
+],
+[
+"Norway",
+100
+],
+[
+"Oman",
+100
+],
+[
+"Pakistan",
+97.53484344
+],
+[
+"Palau",
+99.8103
+],
+[
+"Panama",
+91.59696198
+],
+[
+"Papua New Guinea",
+20.26445007
+],
+[
+"Paraguay",
+99.000716
+],
+[
+"Peru",
+92.919989
+],
+[
+"Philippines",
+89.12577057
+],
+[
+"Poland",
+100
+],
+[
+"Portugal",
+100
+],
+[
+"Puerto Rico",
+100
+],
+[
+"Qatar",
+100
+],
+[
+"Romania",
+100
+],
+[
+"Russian Federation",
+100
+],
+[
+"Rwanda",
+19.8
+],
+[
+"Samoa",
+97.9
+],
+[
+"San Marino",
+100
+],
+[
+"Sao Tome and Principe",
+68.6
+],
+[
+"Saudi Arabia",
+100
+],
+[
+"Senegal",
+61
+],
+[
+"Serbia",
+100
+],
+[
+"Seychelles",
+99.54418182
+],
+[
+"Sierra Leone",
+13.09699154
+],
+[
+"Singapore",
+100
+],
+[
+"Sint Maarten (Dutch part)",
+100
+],
+[
+"Slovak Republic",
+100
+],
+[
+"Slovenia",
+100
+],
+[
+"Solomon Islands",
+35.11455917
+],
+[
+"Somalia",
+19.05978203
+],
+[
+"South Africa",
+86
+],
+[
+"South Sudan",
+4.530425072
+],
+[
+"Spain",
+100
+],
+[
+"Sri Lanka",
+92.19124603
+],
+[
+"St. Kitts and Nevis",
+100
+],
+[
+"St. Lucia",
+98.16381073
+],
+[
+"St. Martin (French part)",
+100
+],
+[
+"St. Vincent and the Grenadines",
+99.02001953
+],
+[
+"Sudan",
+44.9
+],
+[
+"Suriname",
+100
+],
+[
+"Swaziland",
+65
+],
+[
+"Sweden",
+100
+],
+[
+"Switzerland",
+100
+],
+[
+"Syrian Arab Republic",
+95.84322357
+],
+[
+"Tajikistan",
+99.98976135
+],
+[
+"Tanzania",
+15.50144958
+],
+[
+"Thailand",
+100
+],
+[
+"Timor-Leste",
+45.38023758
+],
+[
+"Togo",
+45.7
+],
+[
+"Tonga",
+95.25174713
+],
+[
+"Trinidad and Tobago",
+100
+],
+[
+"Tunisia",
+99.8
+],
+[
+"Turkey",
+100
+],
+[
+"Turkmenistan",
+100
+],
+[
+"Turks and Caicos Islands",
+94.98634338
+],
+[
+"Tuvalu",
+98.53022003
+],
+[
+"Uganda",
+20.4
+],
+[
+"Ukraine",
+100
+],
+[
+"United Arab Emirates",
+100
+],
+[
+"United Kingdom",
+100
+],
+[
+"United States",
+100
+],
+[
+"Uruguay",
+99.657085
+],
+[
+"Uzbekistan",
+100
+],
+[
+"Vanuatu",
+34.46945572
+],
+[
+"Venezuela, RB",
+99.10779572
+],
+[
+"Vietnam",
+99.2
+],
+[
+"Virgin Islands (U.S.)",
+100
+],
+[
+"West Bank and Gaza",
+99.9
+],
+[
+"Yemen, Rep.",
+72.04101562
+],
+[
+"Zambia",
+27.9
+],
+[
+"Zimbabwe",
+32.3
+] 
+];
+data.addColumn('string','country');
+data.addColumn('number','value');
+data.addRows(datajson);
+return(data);
+}
+ 
+// jsDrawChart
+function drawChartTableID111c55945ca4() {
+var data = gvisDataTableID111c55945ca4();
+var options = {};
+options["allowHtml"] = true;
+options["width"] = 220;
+options["height"] = 400;
+
+    var chart = new google.visualization.Table(
+    document.getElementById('TableID111c55945ca4')
+    );
+    chart.draw(data,options);
+    
+
+}
+  
+
+
+// jsDrawChart
+function drawChartGeoChartID111c6478d1a() {
+var data = gvisDataGeoChartID111c6478d1a();
+var options = {};
+options["width"] = 600;
+options["height"] = 400;
+options["dataMode"] = "regions";
+
+    var chart = new google.visualization.GeoChart(
+    document.getElementById('GeoChartID111c6478d1a')
+    );
+    chart.draw(data,options);
+    
+
+}
+  
+ 
+// jsDisplayChart
+(function() {
+var pkgs = window.__gvisPackages = window.__gvisPackages || [];
+var callbacks = window.__gvisCallbacks = window.__gvisCallbacks || [];
+var chartid = "table";
+  
+// Manually see if chartid is in pkgs (not all browsers support Array.indexOf)
+var i, newPackage = true;
+for (i = 0; newPackage && i < pkgs.length; i++) {
+if (pkgs[i] === chartid)
+newPackage = false;
+}
+if (newPackage)
+  pkgs.push(chartid);
+  
+// Add the drawChart function to the global list of callbacks
+callbacks.push(drawChartTableID111c55945ca4);
+})();
+function displayChartTableID111c55945ca4() {
+  var pkgs = window.__gvisPackages = window.__gvisPackages || [];
+  var callbacks = window.__gvisCallbacks = window.__gvisCallbacks || [];
+  window.clearTimeout(window.__gvisLoad);
+  // The timeout is set to 100 because otherwise the container div we are
+  // targeting might not be part of the document yet
+  window.__gvisLoad = setTimeout(function() {
+  var pkgCount = pkgs.length;
+  google.load("visualization", "1", { packages:pkgs, callback: function() {
+  if (pkgCount != pkgs.length) {
+  // Race condition where another setTimeout call snuck in after us; if
+  // that call added a package, we must not shift its callback
+  return;
+}
+while (callbacks.length > 0)
+callbacks.shift()();
+} });
+}, 100);
+}
+
+
+// jsDisplayChart
+(function() {
+var pkgs = window.__gvisPackages = window.__gvisPackages || [];
+var callbacks = window.__gvisCallbacks = window.__gvisCallbacks || [];
+var chartid = "geochart";
+  
+// Manually see if chartid is in pkgs (not all browsers support Array.indexOf)
+var i, newPackage = true;
+for (i = 0; newPackage && i < pkgs.length; i++) {
+if (pkgs[i] === chartid)
+newPackage = false;
+}
+if (newPackage)
+  pkgs.push(chartid);
+  
+// Add the drawChart function to the global list of callbacks
+callbacks.push(drawChartGeoChartID111c6478d1a);
+})();
+function displayChartGeoChartID111c6478d1a() {
+  var pkgs = window.__gvisPackages = window.__gvisPackages || [];
+  var callbacks = window.__gvisCallbacks = window.__gvisCallbacks || [];
+  window.clearTimeout(window.__gvisLoad);
+  // The timeout is set to 100 because otherwise the container div we are
+  // targeting might not be part of the document yet
+  window.__gvisLoad = setTimeout(function() {
+  var pkgCount = pkgs.length;
+  google.load("visualization", "1", { packages:pkgs, callback: function() {
+  if (pkgCount != pkgs.length) {
+  // Race condition where another setTimeout call snuck in after us; if
+  // that call added a package, we must not shift its callback
+  return;
+}
+while (callbacks.length > 0)
+callbacks.shift()();
+} });
+}, 100);
+}
+ 
+// jsFooter
+</script>
+<!-- jsChart -->
+<script type="text/javascript" src="https://www.google.com/jsapi?callback=displayChartTableID111c55945ca4"></script>
+<!-- jsChart -->
+<script type="text/javascript" src="https://www.google.com/jsapi?callback=displayChartGeoChartID111c6478d1a"></script>
+<table bgcolor="#CCCCCC" cellspacing="10">
+<tr>
+<td>
+<!-- divChart -->
+<div id="TableID111c55945ca4" style="width: 220; height: 400;">
+
+</div>
+</td>
+<td>
+<!-- divChart -->
+<div id="GeoChartID111c6478d1a" style="width: 600; height: 400;">
+
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div id="---leaflet" class="section level1">
+<h1>Карта на основе leaflet</h1>
+<p>На этой карте показаны 5 кольцевых станций Московского метрополитена:</p>
+<ul>
+<li>Метро Таганская (Кольцевая)</li>
+<li>Метро Курская (Кольцевая)</li>
+<li>Метро Комсомольская (Кольцевая)</li>
+<li>Метро Проспект Мира (Кольцевая)</li>
+<li>Метро Новослободская (Кольцевая)</li>
+</ul>
+<pre class="r"><code>library(leaflet)
+metro &lt;- data.frame(place = c(&quot;Метро Таганская&quot;, &quot;Метро Курская&quot;,
+                                 &quot;Метро Комсомольская&quot;, &quot;Метро Проспект Мира&quot;, &quot;Метро Новослободская&quot;),
+latitude = c(55.74252012003351, 55.75832413565553 , 55.77587680404152 , 55.77976384155851 , 55.77967616728739 ),
+longitude = c(37.653333011893544, 37.660029686085835, 37.655052933905715, 37.633386209415534 , 37.600944891380415))
+metro %&gt;% leaflet() %&gt;% addTiles() %&gt;%
+ addMarkers(popup = metro$place,
+ clusterOptions = markerClusterOptions()) %&gt;%
+ addCircles(weight = 1, radius = 10)</code></pre>
+<div id="htmlwidget-5412d6e771fc3608b516" style="width:672px;height:480px;" class="leaflet html-widget"></div>
+<script type="application/json" data-for="htmlwidget-5412d6e771fc3608b516">{"x":{"options":{"crs":{"crsClass":"L.CRS.EPSG3857","code":null,"proj4def":null,"projectedBounds":null,"options":{}}},"calls":[{"method":"addTiles","args":["//{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",null,null,{"minZoom":0,"maxZoom":18,"maxNativeZoom":null,"tileSize":256,"subdomains":"abc","errorTileUrl":"","tms":false,"continuousWorld":false,"noWrap":false,"zoomOffset":0,"zoomReverse":false,"opacity":1,"zIndex":null,"unloadInvisibleTiles":null,"updateWhenIdle":null,"detectRetina":false,"reuseTiles":false,"attribution":"&copy; <a href=\"http://openstreetmap.org\">OpenStreetMap<\/a> contributors, <a href=\"http://creativecommons.org/licenses/by-sa/2.0/\">CC-BY-SA<\/a>"}]},{"method":"addMarkers","args":[[55.7425201200335,55.7583241356555,55.7758768040415,55.7797638415585,55.7796761672874],[37.6533330118935,37.6600296860858,37.6550529339057,37.6333862094155,37.6009448913804],null,null,null,{"clickable":true,"draggable":false,"keyboard":true,"title":"","alt":"","zIndexOffset":0,"opacity":1,"riseOnHover":false,"riseOffset":250},["Метро Таганская","Метро Курская","Метро Комсомольская","Метро Проспект Мира","Метро Новослободская"],null,{"showCoverageOnHover":true,"zoomToBoundsOnClick":true,"spiderfyOnMaxZoom":true,"removeOutsideVisibleBounds":true,"spiderLegPolylineOptions":{"weight":1.5,"color":"#222","opacity":0.5},"freezeAtZoom":false},null,null,null,null]},{"method":"addCircles","args":[[55.7425201200335,55.7583241356555,55.7758768040415,55.7797638415585,55.7796761672874],[37.6533330118935,37.6600296860858,37.6550529339057,37.6333862094155,37.6009448913804],10,null,null,{"lineCap":null,"lineJoin":null,"clickable":true,"pointerEvents":null,"className":"","stroke":true,"color":"#03F","weight":1,"opacity":0.5,"fill":true,"fillColor":"#03F","fillOpacity":0.2,"dashArray":null},null,null,null,null,null,null]}],"limits":{"lat":[55.7425201200335,55.7797638415585],"lng":[37.6009448913804,37.6600296860858]}},"evals":[],"jsHooks":[]}</script>
+</div>
+<div id="---" class="section level1">
+<h1>Вывод по отображению станций</h1>
+<p>Вкачестве координат были использованы фае кольцевых станций Московского метрополитена, но на картах Google в качестве станций отображаются платформы.</p>
+</div>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
