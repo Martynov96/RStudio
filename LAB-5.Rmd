@@ -1,0 +1,69 @@
+---
+title: "lab5"
+author: "Anton"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    self_contained: no
+---
+
+
+## Задание
+ Интерактивная карта-хороплет стран мира (GVis), показатель –
+ любой из раздела «Environment» (Окружающая среда) базы Всемирного банка.
+
+# Интерактивная картограмма  
+
+```{r, echo=TRUE, message=F, warning=FALSE, cashe=T, results='asis'}
+library('WDI')
+library('googleVis')
+library('data.table')
+
+# пакет с API для WorldBank
+# загрузка данных по всем странам, 2014 год, показатель
+# Access to electricity (% of population)
+dat <- WDI(indicator = 'EG.ELC.ACCS.ZS', start = 2014, end = 2014)
+DT <- data.table(country = dat$country, value = dat$EG.ELC.ACCS.ZS)
+# объект: таблица исходных данных
+g.tbl <- gvisTable(data = DT, 
+                   options = list(width = 220, height = 400))
+# объект: интерактивная карта
+g.chart <- gvisGeoChart(data = DT, 
+                        locationvar = 'country', 
+                        colorvar = 'value', 
+                        options = list(width = 600, 
+                                       height = 400, 
+                                       dataMode = 'regions'))
+# размещаем таблицу и карту на одной панели (слева направо)
+TG <- gvisMerge(g.tbl, g.chart, 
+                horizontal = TRUE, 
+                tableOptions = 'bgcolor=\"#CCCCCC\" cellspacing=10')
+
+# вставляем результат в html-документ
+print(TG, 'chart')
+```
+
+
+# Карта на основе leaflet  
+На этой карте показаны 5 кольцевых станций Московского метрополитена:
+
+* Метро Таганская (Кольцевая)
+* Метро Курская (Кольцевая)
+* Метро Комсомольская (Кольцевая)
+* Метро Проспект Мира (Кольцевая)
+* Метро Новослободская (Кольцевая)
+
+```{r, echo = T, message=FALSE, warning=F, results='asis'}
+library(leaflet)
+metro <- data.frame(place = c("Метро Таганская", "Метро Курская",
+                                 "Метро Комсомольская", "Метро Проспект Мира", "Метро Новослободская"),
+latitude = c(55.74252012003351, 55.75832413565553 , 55.77587680404152 , 55.77976384155851 , 55.77967616728739 ),
+longitude = c(37.653333011893544, 37.660029686085835, 37.655052933905715, 37.633386209415534 , 37.600944891380415))
+metro %>% leaflet() %>% addTiles() %>%
+ addMarkers(popup = metro$place,
+ clusterOptions = markerClusterOptions()) %>%
+ addCircles(weight = 1, radius = 10)
+```
+
+# Вывод по отображению станций  
+Вкачестве координат были использованы фае кольцевых станций Московского метрополитена, но на картах Google в качестве станций отображаются платформы. 
