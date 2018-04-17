@@ -1,0 +1,94 @@
+---
+title: "Lab4"
+author: "Anton"
+date: '17 апреля 2018 г '
+output: html_document
+---
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+#init
+
+library('rgdal')
+library('gpclib')
+# включаем остальные пакеты
+require('rgdal') # функция readOGR()
+require('plyr') # функция join()
+library('sp') # функция spplot()
+library('mapproj') # работа с проекциями карт
+
+```
+
+```{r, message=FALSE, warning=FALSE, include=FALSE}
+# загружаем статистику с показателями по регионам
+fileURL = "vrp.csv"
+stat.Regions <- read.csv(fileURL, sep = '\t', as.is = T, encoding = 'UTF-8', dec = ',')
+
+library('maptools')
+# загрузить ShapeFile с http://www.gadm.org
+
+ShapeFileURL <- "http://biogeo.ucdavis.edu/data/gadm2.8/shp/RUS_adm_shp.zip"
+if(!file.exists('./data')){
+  dir.create('./data')
+}
+if(!file.exists('./data/RUS_adm_shp.zip')) {
+  download.file(ShapeFileURL, destfile = './data/RUS_adm_shp.zip')
+}
+# распаковать архив
+unzip('./data/RUS_adm_shp.zip', exdir = './data/RUS_adm_shp')
+
+
+# Формируем данные для ggplot
+# читаем ShapeFile из папки, с указанием уровня иерархии
+Regions <- readOGR(dsn = './data/RUS_adm_shp', # папка
+                   layer = 'RUS_adm1') # уровень
+
+# делаем фактор из имён областей (т.е. нумеруем их)
+Regions@data$NAME_1 <- as.factor(Regions@data$NAME_1 )
+stat.Regions$VARNAME_1 <- stat.Regions$name
+Regions@data <- join(Regions@data, stat.Regions[, c('VARNAME_1',
+                                                    'VRP_NAS',
+                                                    "name")],
+                     by = 'VARNAME_1')
+
+# координаты центров полигонов (для подписей регионов)
+centroids.df <- as.data.frame(coordinates(Regions))
+# названия регионов (идут в том же порядке, в каком
+# считались центроиды
+centroids.df$id <- Regions@data$ID_1
+# заменяем имена переменных, созданные по умолчанию
+colnames(centroids.df) <- c('long', 'lat', 'id')
+
+```
+
+Данные из базы федеральной службы государственной статистики регионов России: http://www.gks.ru/bgd/regl/B14_14p/Main.htm в shape формате. Данные по валовому региональному продукту на душу населения РФ по регионам за 2012 год (рублей)
+```{r, echo=FALSE}
+head(stat.Regions[, c("name", 'VRP_NAS')])
+
+```
+
+
+График валового регионального продукта на душу населения РФ по регионам за 2012 год (рублей)
+```{r, echo=FALSE}
+
+# загрузка пакета
+library('RColorBrewer') # цветовые палитры
+# задаём палитру
+mypalette <- colorRampPalette(c('whitesmoke', 'coral3'))
+
+
+# создаём график
+spplot(Regions, 'VRP_NAS',
+       col.regions = mypalette(20), col = 'coral4', 
+       main = 'ВРП на душу населения в 2012, рублей',
+       panel = function(x, y, z, subscripts, ...) {
+         panel.polygonsplot(x, y, z, subscripts, ...)
+         #sp.text(coordinates(Regions),
+         #        Regions$name[subscripts])
+         }
+       
+)
+rm(Regions)
+
+```
+
+
